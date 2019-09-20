@@ -33,68 +33,89 @@ class Loader {
                 document = Jsoup.connect(url).get();
                 Trolleybus trolleybus = new Trolleybus(document.title(), trolleybusNumber);
                 trolleybuses.add(trolleybus);
-                System.out.println(document.title());
-                loadWorkDaysHours(trolleybus);
-                loadWeekendHours(trolleybus);
+                loadStops(trolleybus, url);
+                loadWorkDaysHours(trolleybus.getStops());
+                loadWeekendHours(trolleybus.getStops());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    private void loadWorkDaysHours(Trolleybus trolleybus) {
-        Element table = document.select("table").get(0);
-        Elements rows = table.select("tr");
-
-        System.out.println("Будні дні");
-
-        for (Element row : rows) {
-            Elements cols = row.select("td");
-            if (cols.isEmpty()) continue;
-            if (!cols.get(0).text().equals("")) {
-                hour = new Hour(cols.get(0).text());
-                trolleybus.addWorkDaysHour(hour);
-            }
-
-            for (int i = 1; i < cols.size(); i++) {
-                if (!cols.get(i).text().equals("")) {
-                    hour.addMinute(cols.get(i).text());
-                    System.out.print(cols.get(i).text() + " ");
-                }
-            }
-            System.out.println();
+    public void loadStops(Trolleybus trolleybus, String url) {
+        Element chosenRote = document.select("div.chosen-route.active").get(0);
+        Element ul = chosenRote.select("ul").get(0);
+        Elements li = ul.select("li");
+        for (Element l : li) {
+            String s = l.attr("onClick");
+            s = s.substring(61, s.length() - 1);
+            s = s.substring(s.indexOf(' ') + 1);
+            String stopUrl = url + '/' + s;
+            String name = l.select("p").text();
+            trolleybus.addStop(new Stop(name, stopUrl));
         }
     }
 
-    private void loadWeekendHours(Trolleybus trolleybus) {
-        Element table = document.select("table").get(1);
-        Elements rows = table.select("tr");
+    private void loadWorkDaysHours(List<Stop> stops) {
+        stops.parallelStream().forEach(stop -> {
+            try {
+                Document stopDocument = Jsoup.connect(stop.getUrl()).get();
+                Element table = stopDocument.select("table").get(0);
+                Elements rows = table.select("tr");
 
-        System.out.println("Вихідні дні");
+                for (Element row : rows) {
+                    Elements cols = row.select("td");
+                    if (cols.isEmpty()) continue;
+                    if (!cols.get(0).text().equals("")) {
+                        hour = new Hour(cols.get(0).text());
+                        stop.addWorkDaysHour(hour);
+                    }
 
-        for (Element row : rows) {
-            Elements cols = row.select("td");
-            if (cols.isEmpty()) continue;
-            if (cols.get(0).text().equals("Маршрут не працює в ці дні")) {
-                trolleybus.weekendHoursSetNull();
-                return;
-            }
-            if (!cols.get(0).text().equals("")) {
-                hour = new Hour(cols.get(0).text());
-                trolleybus.addWeekendHour(hour);
-            }
-
-            for (int i = 1; i < cols.size(); i++) {
-                if (!cols.get(i).text().equals("")) {
-                    hour.addMinute(cols.get(i).text());
-                    System.out.print(cols.get(i).text() + " ");
+                    for (int i = 1; i < cols.size(); i++) {
+                        if (!cols.get(i).text().equals("")) {
+                            hour.addMinute(cols.get(i).text());
+                        }
+                    }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            System.out.println();
-        }
+        });
+    }
+
+    private void loadWeekendHours(List<Stop> stops) {
+        stops.parallelStream().forEach(stop -> {
+            try {
+                Document stopDocument = Jsoup.connect(stop.getUrl()).get();
+                Element table = stopDocument.select("table").get(0);
+                Elements rows = table.select("tr");
+
+                for (Element row : rows) {
+                    Elements cols = row.select("td");
+                    if (cols.isEmpty()) continue;
+                    if (cols.get(0).text().equals("Маршрут не працює в ці дні")) {
+                        stop.weekendHoursSetNull();
+                        return;
+                    }
+                    if (!cols.get(0).text().equals("")) {
+                        hour = new Hour(cols.get(0).text());
+                        stop.addWeekendHour(hour);
+                    }
+
+                    for (int i = 1; i < cols.size(); i++) {
+                        if (!cols.get(i).text().equals("")) {
+                            hour.addMinute(cols.get(i).text());
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public List<Trolleybus> getTrolleybuses() {
         return trolleybuses;
     }
+
 }
