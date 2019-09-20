@@ -6,9 +6,8 @@ import java.io.IOException;
 import java.util.*;
 
 class Loader {
-    private Map<String, String> urls = new HashMap<>();
-    private Document document;
     private List<Trolleybus> trolleybuses = new ArrayList<>();
+    private Map<String, String> urls = new HashMap<>();
     private Hour hour;
 
     {
@@ -30,10 +29,10 @@ class Loader {
     void load() {
         urls.forEach((trolleybusNumber, url) -> {
             try {
-                document = Jsoup.connect(url).get();
+                Document document = Jsoup.connect(url).get();
                 Trolleybus trolleybus = new Trolleybus(document.title(), trolleybusNumber);
                 trolleybuses.add(trolleybus);
-                loadStops(trolleybus, url);
+                loadStops(trolleybus, url, document);
                 loadWorkDaysHours(trolleybus.getStops());
                 loadWeekendHours(trolleybus.getStops());
             } catch (IOException e) {
@@ -42,7 +41,7 @@ class Loader {
         });
     }
 
-    public void loadStops(Trolleybus trolleybus, String url) {
+    private void loadStops(Trolleybus trolleybus, String url, Document document) {
         Element chosenRote = document.select("div.chosen-route.active").get(0);
         Element ul = chosenRote.select("ul").get(0);
         Elements li = ul.select("li");
