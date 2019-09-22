@@ -15,7 +15,7 @@ class Trolleybus {
         return name;
     }
 
-    public String getnumber() {
+    public String getNumber() {
         return number;
     }
 

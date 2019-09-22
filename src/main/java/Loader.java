@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.*;
 
 class Loader {
-    private List<Trolleybus> trolleybuses = new ArrayList<>();
+    private static List<Trolleybus> trolleybuses = new ArrayList<>();
     private Map<String, String> urls = new HashMap<>();
     private Hour hour;
 
@@ -33,8 +33,8 @@ class Loader {
                 Trolleybus trolleybus = new Trolleybus(document.title(), trolleybusNumber);
                 trolleybuses.add(trolleybus);
                 loadStops(trolleybus, url, document);
-                loadWorkDaysHours(trolleybus.getStops());
-                loadWeekendHours(trolleybus.getStops());
+                //loadWorkDaysHours(trolleybus.getStops());
+                //loadWeekendHours(trolleybus.getStops());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -113,7 +113,7 @@ class Loader {
         });
     }
 
-    public List<Trolleybus> getTrolleybuses() {
+    public static List<Trolleybus> getTrolleybuses() {
         return trolleybuses;
     }
 
