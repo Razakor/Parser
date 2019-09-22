@@ -7,10 +7,10 @@ import java.util.*;
 
 class Loader {
     private static List<Trolleybus> trolleybuses = new ArrayList<>();
-    private Map<String, String> urls = new HashMap<>();
-    private Hour hour;
+    private static Map<String, String> urls = new HashMap<>();
+    private static Hour hour;
 
-    {
+    static {
         urls.put("1", "https://vn.rozklad.in.ua/home/schedule/48");
         urls.put("2", "https://vn.rozklad.in.ua/home/schedule/50");
         urls.put("3", "https://vn.rozklad.in.ua/home/schedule/74");
@@ -26,7 +26,7 @@ class Loader {
         urls.put("13", "https://vn.rozklad.in.ua/home/schedule/53");
     }
 
-    void load() {
+    static void  load() {
         urls.forEach((trolleybusNumber, url) -> {
             try {
                 Document document = Jsoup.connect(url).get();
@@ -41,7 +41,7 @@ class Loader {
         });
     }
 
-    private void loadStops(Trolleybus trolleybus, String url, Document document) {
+    private static void loadStops(Trolleybus trolleybus, String url, Document document) {
         Element chosenRote = document.select("div.chosen-route.active").get(0);
         Element ul = chosenRote.select("ul").get(0);
         Elements li = ul.select("li");
@@ -55,7 +55,7 @@ class Loader {
         }
     }
 
-    private void loadWorkDaysHours(List<Stop> stops) {
+    private static void loadWorkDaysHours(List<Stop> stops) {
         stops.parallelStream().forEach(stop -> {
             try {
                 Document stopDocument = Jsoup.connect(stop.getUrl()).get();
@@ -82,7 +82,7 @@ class Loader {
         });
     }
 
-    private void loadWeekendHours(List<Stop> stops) {
+    private static void loadWeekendHours(List<Stop> stops) {
         stops.parallelStream().forEach(stop -> {
             try {
                 Document stopDocument = Jsoup.connect(stop.getUrl()).get();
@@ -116,5 +116,4 @@ class Loader {
     public static List<Trolleybus> getTrolleybuses() {
         return trolleybuses;
     }
-
 }
