@@ -1,6 +1,7 @@
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class DatabaseOperations {
 
@@ -8,6 +9,7 @@ class DatabaseOperations {
         insertTrolleybuses();
         insertStops();
         setTrolleybusesStops();
+        insertHours();
     }
 
     private static void insertTrolleybuses() throws SQLException {
@@ -55,5 +57,47 @@ class DatabaseOperations {
                 e.printStackTrace();
             }
         }));
+    }
+
+    private static void insertHours() throws SQLException {
+        DatabaseConnection.statement.executeUpdate("DELETE FROM hours");
+        DatabaseConnection.statement.executeUpdate("DELETE FROM minutes");
+        AtomicInteger id = new AtomicInteger();
+        Loader.getTrolleybuses().forEach(trolleybus -> trolleybus.getStops().forEach(stop -> {
+            stop.getWorkDaysHours().forEach(hour -> {
+                id.getAndIncrement();
+                String sql = "INSERT INTO hours (id, trolleybus_number, stop_name, val, is_work_day)\n" +
+                        "VALUES ('" + id.get() + "', '" + trolleybus.getNumber() + "', '" + stop.getName() + "', '" + hour.getHour() + "', '1')";
+                try {
+                    DatabaseConnection.statement.executeUpdate(sql);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                insertMinutes(hour, id);
+            });
+            stop.getWeekendHours().forEach(hour -> {
+                id.getAndIncrement();
+                String sql = "INSERT INTO hours (id, trolleybus_number, stop_name, val, is_work_day)\n" +
+                        "VALUES ('" + id.get() + "', '" + trolleybus.getNumber() + "', '" + stop.getName() + "', '" + hour.getHour() + "', '0')";
+                try {
+                    DatabaseConnection.statement.executeUpdate(sql);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                insertMinutes(hour, id);
+            });
+        }));
+    }
+
+    private static void insertMinutes(Hour hour, AtomicInteger id) {
+        hour.getMinutes().forEach( minute -> {
+            String sql = "INSERT INTO minutes (hour_id, val)\n" +
+                    "VALUES ('" + id.get() + "', '" + minute + "')";
+            try {
+                DatabaseConnection.statement.executeUpdate(sql);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

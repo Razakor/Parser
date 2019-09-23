@@ -24,6 +24,8 @@ class Loader {
         urls.put("11", "https://vn.rozklad.in.ua/home/schedule/59");
         urls.put("12", "https://vn.rozklad.in.ua/home/schedule/57");
         urls.put("13", "https://vn.rozklad.in.ua/home/schedule/53");
+        urls.put("14", "https://vn.rozklad.in.ua/home/schedule/109");
+        urls.put("15", "https://vn.rozklad.in.ua/home/schedule/61");
     }
 
     static void  load() {
@@ -33,8 +35,8 @@ class Loader {
                 Trolleybus trolleybus = new Trolleybus(document.title(), trolleybusNumber);
                 trolleybuses.add(trolleybus);
                 loadStops(trolleybus, url, document);
-                //loadWorkDaysHours(trolleybus.getStops());
-                //loadWeekendHours(trolleybus.getStops());
+                loadWorkDaysHours(trolleybus.getStops());
+                loadWeekendHours(trolleybus.getStops());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -113,7 +115,7 @@ class Loader {
         });
     }
 
-    public static List<Trolleybus> getTrolleybuses() {
+    static List<Trolleybus> getTrolleybuses() {
         return trolleybuses;
     }
 }
